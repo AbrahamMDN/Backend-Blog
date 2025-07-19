@@ -27,14 +27,13 @@ app.post('/posts', (req, res) => {
 });
 
 // Endpoint borrar el último post
-// HAcee gitnit
 app.delete('/posts', (req, res) => {
     const DelatedPost = post.pop();
     console.log('Post eliminado', DelatedPost);
     res.json({message: 'Último post eliminado correctamente'});
 });
 
-
+// Se inicia el servidor
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
