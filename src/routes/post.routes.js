@@ -8,6 +8,9 @@ router.get('/', postController.getAllPost);  // endpoint = http://localhost:3000
 
 router.get('/:id', postController.getPostById);  // endpoint = http://localhost:3000/posts/:id = http://localhost:3000/posts/1
 
+// Nueva ruta 
+router.get('/title/:title', postController.getPostByTitle); // endpoint = http://localhost:3000/posts/title/:title
+
 router.post('/', postController.createPost); // endpoint = http://localhost:3000/posts/
 
 router.put('/:id', postController.updatePost); // endpoint = http://localhost:3000/posts/:id = http://localhost:3000/posts/1

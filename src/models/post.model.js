@@ -1,9 +1,14 @@
-// Un modelo me ayuda conocer como es el objeto para identificarlo
+// Importación de Mongoose
+const mongoose = require('mongoose');
 
-// Creación de arreglo base que simula persistencia en memoria
-let posts = [
-    { id: 1, title: 'Primer post', content: 'Hola mundo'}
-]
+// Se define la estructura de un post a través de mongoose
+const postSchema = new mongoose.Schema({
+    title: String,
+    content: String,
+    // Se define el user_id a través de mi modelo de usuario
+    user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, 
+    created_at: { type: Date, default: Date.now }
+});
 
-// Exportación posts
-module.exports = posts
+// // Exportación del modelo para post. Se interpreta como Post por otros desarrollos
+module.exports = mongoose.model('Post', postSchema);

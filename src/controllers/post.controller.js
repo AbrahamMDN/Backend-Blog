@@ -1,127 +1,61 @@
-// Un controlador decide que hacer. Es la parte lógica.
-// Let permite un mayor alcance de una variable, pero de forma controlada
-
-// Importación de modelo base
-let posts = require('../models/post.model');
+// Importación de modelo base para un post
+const Post = require('../models/post.model');
 
 /* Definición de controles-acciones */
+// Se adaptan como asíncronos para que sean adecuados para la conexión con la BD en la nube
 
 // Obtener todos los post (GET)
-exports.getAllPost = (req, res) => {
-    res.json(posts)
+exports.getAllPost = async (req, res) => {
+    try {
+        const posts = await Post.find();
+        res.json(posts)
+    } catch (error) {
+        res.status(500).json({message: 'Error al obtener todos los posts', error: error.message});
+    }
 };
 
 // Cuando se trabaja con BD, es el controller el que se conecta con ella
 
 // Obtener post por id (GET)
-exports.getPostById = (req, res) => {
-    const id = parseInt(req.params.id);
-    const post = posts.find(p => p.id === id);
-    if (!post) return res.status(404).json({error: 'Post no encontrado'});
-    res.json(post);
+exports.getPostById = async (req, res) => {
+    try{
+        const post = await Post.findById(req.params.id);
+        if (post) return res.json(post)
+        return res.status(401).json({message: 'Post no encontrado'})
+    } catch (error) {
+        return res.status(500).json({message: 'Error al encontrar el post', error: error.message})
+    }    
 }; 
+// Tarea con findOne para tarer un post por su titulo. Hacer el Endpoint
 
-// Cada que haga un cambio en mi código, debo cerrar mi servidor y volverlo a correr (npm run start)
+
+
+// Cada que haga un cambio en mi código, debo cerrar mi servidor y volverlo a correr (npm run start). Si utilizo nodemon, ya no es necesario cerrar y cargar el servidor después de cada cambio
 
 // Crear post
-exports.createPost = (req, res) => {
-    const newPost = {
-        id: Date.now(),
-        title: req.body.title,
-        content: req.body.content
-    };
-    posts.push(newPost);
-
-    return res.status(201).json(newPost); 
+/* Puedo agregar el user id por FrontEnd al agregar el campo user_id en el body del input (siendo el mismo id que se me proporciona al logearme) */
+exports.createPost = async (req, res) => {
+    const post =  new Post(req.body);
+    await post.save();
+    return res.status(201).json(post); 
+    // Que no se repita el mismo post
 };
 
+// Hacer estos dos más robustos
+ // Implementar mensaje de error que no se pudo actualizar y que no se pudo eliminar si no existe id
+ // No se puede actualizar el post porque no existe
+
 // Actualiza datos de posts por id
-exports.updatePost = (req, res) => {
-    const id = parseInt(req.params.id);
-    const index = posts.findIndex(p => p.id === id);
-    if (index === -1) return res.status(404).json({error: 'Post no encontrado'});
-
-    posts[index] = {
-        ...posts[index], 
-        title: req.body.title,
-        content: req.body.content
-    };
-
-    return res.json(posts[index]); 
+exports.updatePost = async (req, res) => {
+    // Se añade un parámetro new para indicar que es una actualización
+    const updated = await Post.findByIdAndUpdate(req.params.id, req.body, {new: true});
+    return res.json(updated);
 };
 
 // Elimina un post por id
-exports.deletePost = (req, res) => {
-    const id = parseInt(req.params.id);
-    const inicial = posts.length;
-    posts = posts.filter(p => p.id !== id)
-    if (posts.length === inicial) return res.status(404).json({error: 'Post no encontrado'});
-
-    // Actualiza el modulo donde esta nuestro arreglo de post: post.model
-    // Divide mi arreglo en 2: la sección que quiero eliminar y la sección a conservar actualizada
-    require('../models/post.model').splice(0, require('../models/post.model').length, ... posts);
-
+exports.deletePost = async (req, res) => {
+    await Post.findByIdAndDelete(req.params.id);
     return res.status(204).end();
 };
 
 
-/* Tarea: Método crear posts con id numérico, incluyendo impresión de errores por id existentes */
-
-// Opción 1) El usuario proporciona el id manualmente (no es autoajustable)
-
-/*
-exports.createPost = (req, res) => {
-    // Estructura del post
-    const { id, title, content } = req.body;
-
-    // Validar que el ID sea un número
-    if (typeof id !== 'number') {
-        return res.status(400).json({ error: "El ID debe ser un número." });
-    }
-
-    // Verificar si el ID ya existe
-    const idExistente = posts.some(post => post.id === id);
-
-    if (idExistente) {
-        return res.status(400).json({ error: `Ya existe un post con el ID ${id}` });
-    }
-
-    // Creación del nuevo post y adición al arreglo
-    const newPost = { id, title, content };
-    posts.push(newPost);
-
-    return res.status(201).json(newPost);
-};
-*/
-
-// Opción 2) El sistema proporciona un id incremental autoajustable
-
-/*
-// Contador inicial de id
-let currentId = 1;
-
-exports.createPost = (req, res) => {
-    // Inputs del post
-    const { title, content } = req.body;
-
-    // Validación de datos requeridos
-    if (!title || !content) {
-        return res.status(400).json({ error: "Título y contenido son obligatorios." });
-    }
-
-    // Verifica si el ID ya existe antes de usarlo
-    if (posts.some(post => post.id === currentId)) {
-        return res.status(400).json({ error: `Ya existe un post con el ID ${currentId}` });
-    }
-
-    // Creación del nuevo post (con el id incremental) y adición al arreglo
-    const newPost = {
-        id: currentId++,
-        title,
-        content
-    };
-
-    posts.push(newPost);
-    return res.status(201).json(newPost);
-};
-*/
